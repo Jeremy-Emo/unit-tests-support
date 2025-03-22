@@ -8,16 +8,120 @@
 
 		<link rel="stylesheet" href="dist/reset.css">
 		<link rel="stylesheet" href="dist/reveal.css">
-		<link rel="stylesheet" href="dist/theme/black.css">
+		<link rel="stylesheet" href="dist/theme/night.css" />
+		<link rel="stylesheet" href="dist/custom.css">
 
 		<!-- Theme used for syntax highlighted code -->
 		<link rel="stylesheet" href="plugin/highlight/monokai.css">
+
+
 	</head>
 	<body>
 		<div class="reveal">
 			<div class="slides">
-				<section>Slide 1</section>
-				<section>Slide 2</section>
+				<!-- Introduction -->
+				<section data-markdown>
+					<textarea data-template>
+						## Tester son application avec
+
+						![image](img/phpunit.webp)
+
+						---
+
+						### Un test unitaire c'est quoi ?
+
+						---
+
+						<div class="align-left">
+						C'est une méthode <strong>automatisée</strong> permettant de vérifier qu'une petite unité de code (souvent une fonction ou une méthode) fonctionne correctement de manière <strong>indépendante</strong>.
+
+						L'objectif est de s'assurer qu’un élément du code renvoie les résultats attendus dans différents scénarios.
+						</div>
+
+						---
+
+						Exemple :
+
+						```php [1:]
+						class UserService {
+							public function generateUsername(string $firstName, string $lastName): string
+							{
+								// Suppression des espaces et mise en minuscule
+								$username = strtolower(trim($firstName)) . '.' . strtolower(trim($lastName));
+
+								// Remplacement des caractères spéciaux
+								$username = preg_replace('/[^a-z0-9.]/', '', $username);
+
+								return $username;
+							}
+						}
+						```
+
+						---
+
+						Mince ! Mon utilisateur a comme prénom "Alice.", je modifie mon code pour prendre en compte ce cas :
+						```php [1:]
+						class UserService {
+							public function generateUsername(string $firstName, string $lastName): string
+							{
+								// Suppression des espaces et mise en minuscule
+								$username = strtolower(trim($firstName)) . strtolower(trim($lastName));
+
+								// Remplacement des caractères spéciaux
+								$username = preg_replace('/[^a-z0-9.]/', '', $username);
+
+								return $username;
+							}
+						}
+						```
+
+						---
+
+						![GIF animé](https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExY2h6YnZjcWIyZ3l3YjJjdXY5dHV6aTZsOW1uajNpOHo0ZWR6MjcyMyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/laUY2MuoktHPy/giphy.gif)
+
+						---
+
+						```php [1:]
+						use PHPUnit\Framework\TestCase;
+
+						class UserServiceTest extends TestCase {
+							public function testGenerateUsername(): void
+							{
+								$userService = new UserService();
+								$this->assertEquals('john.doe', $userService->generateUsername('John', 'Doe'));
+								$this->assertEquals('jane.doe', $userService->generateUsername('  Jane ', ' DOE '));
+								$this->assertEquals('pierre.dupond', $userService->generateUsername('Pierre', 'Dupond@#'));
+								$this->assertEquals('élise.dupont', $userService->generateUsername('Élise', 'Dupont'));
+							}
+						}
+						```
+
+						---
+
+						Les tests unitaires permettent d'éviter les régressions et d'assurer la robustesse de votre application.
+
+						---
+
+						Cependant ils ne vous épargnent pas de tester à la main votre code !
+
+					</textarea>
+				</section>
+
+				<!-- Installation et écriture de son premier test -->
+				<section data-markdown>
+					<textarea data-template>
+						### Installer PHPUnit
+
+						```sh
+						composer require --dev phpunit/phpunit
+						```
+
+						---
+
+
+						</div>
+					</textarea>
+				</section>
 			</div>
 		</div>
 
@@ -31,9 +135,18 @@
 			// - https://revealjs.com/config/
 			Reveal.initialize({
 				hash: true,
-
+				width: 1200,
 				// Learn about plugins: https://revealjs.com/plugins/
 				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
+			});
+
+			document.addEventListener("DOMContentLoaded", function () {
+				document.querySelectorAll(".slides").forEach(slide => {
+					let footer = document.createElement("div");
+					footer.className = "footer";
+					footer.innerHTML = "2025 - Jérémy Emo";
+					slide.appendChild(footer);
+				});
 			});
 		</script>
 	</body>
