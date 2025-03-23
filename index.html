@@ -427,8 +427,198 @@
 						Place à la pratique !
 
 						<div class="align-left">
-						Ecrire un test pour src/Service/FavoriteColorGuessService;
+						Ecrire une suite de tests pour src/Service/FavoriteColorGuessService;
 						</div>
+					</textarea>
+				</section>
+
+				<!-- Mocks -->
+				<section data-markdown>
+					<textarea data-template>
+						## Ecrire des tests vraiment unitaires
+
+						---
+
+						<div class="align-left">
+						src/Service/EmailService
+						</div>
+
+						```php [17: 7]
+						public function generateEmail(User $user): string
+						{
+							if ($user->getFirstName() === '' || $user->getLastName() === '') {
+								throw new InvalidUserException('First name and last name cannot be empty');
+							}
+
+							$username = $this->userService->generateUsername($user);
+
+							return $username . '@' . self::EMAIL_DOMAIN;
+						}
+						```
+
+						---
+
+						<div class="align-left">
+						Afin de ne pas tester le UserService dans notre EmailService nous allons utiliser des mocks.
+
+						Les mocks sont des objets simulés permettant de tester une classe sans dépendre de ses vraies dépendances.
+						</div>
+
+						---
+
+						<div class="align-left">
+						Pourquoi utiliser des mocks ?
+						</div>
+
+						- Tester une classe indépendamment de ses dépendances
+						- Éviter les appels coûteux (ex: requêtes SQL, requêtes HTTP)
+						- Ne pas dépendre de ressources extérieures au code (ex: API)
+						- Forcer le retour de certaines valeurs pour tester des scénarios spécifiques
+						- Simuler des erreurs (ex: une API qui renvoie une erreur 500)
+
+						---
+
+						```php [13:]
+						#[CoversClass(EmailService::class)]
+						class EmailServiceTest extends TestCase
+						{
+							private EmailService $emailService;
+							private UserService&MockObject $userService;
+
+							public function setUp(): void
+							{
+								$this->userService = $this->createMock(UserService::class);
+								$this->emailService = new EmailService(new UserService());
+							}
+						```
+
+						---
+
+						<div class="align-left">
+						Il ne reste qu'à définir le comportement du mock :
+						</div>
+
+						```php [26: 5]
+						public function testGenerateEmail(): void
+						{
+							// Given
+							$user = (new User())->setFirstName('Maurice')->setLastName('Denice');
+							$this->userService->method('generateUsername')->willReturn('maurice.denice');
+
+							// When
+							$result = $this->emailService->generateEmail($user);
+
+							// Then
+							$this->assertSame('maurice.denice@custom.fr', $result);
+						}
+						```
+
+						---
+
+						<div class="align-left">
+						Il est possible de définir le comportement du mock en fonction de valeurs en entrée :
+						</div>
+
+						```php
+						// Given
+						$user = (new User())->setFirstName('Maurice')->setLastName('Denice');
+						$user2 = (new User())->setFirstName('Brice')->setLastName('Denice');
+						$this->userService->method('generateUsername')->willReturnMap([
+							[$user, 'maurice.denice'],
+							[$user2, 'brice.denice'],
+						]);
+						```
+
+						---
+
+						<div class="align-left">
+						Ou si on souhaite calculer dynamiquement le résultat :
+						</div>
+
+						```php
+						$this->userService->method('generateUsername')->willReturnCallback(
+							function (User $user) {
+								return $user->getFirstName() . '.' . $user->getLastName();
+							}
+						);
+						```
+
+						---
+
+						Exercice
+
+						<div class="align-left">
+						Réaliser une suite de tests pour src/Service/NewsletterService
+						</div>
+
+						---
+
+						<div class="align-left">
+						Vérifier qu'une méthode d'un mock a bien été appelée
+						</div>
+
+						```php
+						$this->mailer->expects($this->once())
+							->method('sendMail')
+							->with('test.test@custom.fr', 'Hello to blue users !');
+
+						// OR
+
+						$this->mailer->expects($this->exactly(1))
+							->method('sendMail')
+							->with('test.test@custom.fr', 'Hello to blue users !');
+
+						// OR
+
+						$this->mailer->expects($this->exactly(1))
+							->method('sendMail')
+							->with($this->anything());
+						```
+
+					</textarea>
+				</section>
+
+				<!-- Bonnes pratiques -->
+				<section data-markdown>
+					<textarea data-template>
+						## Bonnes pratiques
+
+						---
+
+						Tester son code, ça commence par rédiger un code testable.
+
+						---
+
+						Les méthodes statiques sont difficiles à tester, car on peut difficilement les mocker.
+
+						---
+
+						Plus une fonction est grande et fait de choses, plus elle est difficile à tester.
+
+						Exemple: src/Service/SendRedMailsService
+
+						---
+
+						Exercice
+
+						<div class="align-left">
+						Refacto la classe src/Service/SendRedMailsService puis ajouter des tests unitaires couvrant son fonctionnement.
+
+						Ne pas hésiter à la découper en plusieurs services.
+						</div>
+					</textarea>
+				</section>
+
+				<!-- Fin -->
+				<section data-markdown>
+					<textarea data-template>
+						## TP
+
+						Monter la couverture de code du projet à 80% avec des tests robustes et unitaires.
+
+						---
+
+						Merci à tous !
 					</textarea>
 				</section>
 			</div>
