@@ -59,7 +59,10 @@
 
 						---
 
+						<div class="align-left">
 						Mince ! Mon utilisateur a comme prénom "Alice.", je modifie mon code pour prendre en compte ce cas :
+						</div>
+
 						```php [1:]
 						class UserService {
 							public function generateUsername(string $firstName, string $lastName): string
@@ -107,7 +110,7 @@
 					</textarea>
 				</section>
 
-				<!-- Installation et écriture de son premier test -->
+				<!-- Installation et configuration -->
 				<section data-markdown>
 					<textarea data-template>
 						### Installer PHPUnit
@@ -118,7 +121,313 @@
 
 						---
 
+						Structure d'un projet avec PHPUnit
+						```sh
+						/mon-projet
+						│── /src
+						│   ├── UserService.php
+						│── /tests
+						│   ├── UserServiceTest.php
+						│── composer.json
+						│── phpunit.xml
 
+						```
+
+						---
+
+						Lancer PHPUnit avec la génération du coverage
+
+						```sh
+						php vendor/bin/phpunit --coverage-html coverage/
+						```
+
+						---
+
+						```sh
+						There was 1 PHPUnit test runner warning:
+
+						1) XDEBUG_MODE=coverage (environment variable) or xdebug.mode=coverage (PHP configuration setting) has to be set
+						```
+
+						Modifier le php.ini :
+						```sh
+						xdebug.mode=coverage
+						xdebug.start_with_request=yes
+
+						```
+					</textarea>
+				</section>
+
+
+				<!-- Ecriture de son premier test -->
+				<section data-markdown>
+					<textarea data-template>
+						## Ecrire son premier test
+
+						---
+
+						Récupérer le projet à cette url :
+
+						https://github.com/Jeremy-Emo/tests-u-phpunit
+
+						---
+
+						<div class="align-left">
+						src/Service/UserService
+						</div>
+
+						```php [4:]
+						namespace src\Service;
+
+						use src\Entity\User;
+
+						class UserService
+						{
+							public function generateUsername(User $user): string
+							{
+								$username = strtolower(trim($user->getFirstName())) . '.' . strtolower(trim($user->getLastName()));
+
+								return preg_replace('/[^a-z0-9.]/', '', $username);
+							}
+						}
+						```
+
+						---
+
+						<div class="align-left">
+						Initialisation du fichier de test
+						</div>
+
+						```php [4:]
+						namespace tests\Service;
+
+						use PHPUnit\Framework\Attributes\CoversClass;
+						use PHPUnit\Framework\TestCase;
+						use src\Service\UserService;
+
+						#[CoversClass(UserService::class)]
+						class UserServiceTest extends TestCase
+						{ }
+						```
+
+						---
+
+						###### Given / When / Then ?
+
+						```php [11:]
+						#[CoversClass(UserService::class)]
+						class UserServiceTest extends TestCase
+						{
+							public function testGenerateUsername(): void
+							{
+								// Given
+								$userService = new UserService();
+								$user = (new User())->setFirstName('John')->setLastName('Doe');
+
+								// When
+								$result = $userService->generateUsername($user);
+
+								// Then
+								$this->assertSame('john.doe', $result);
+							}
+						}
+						```
+
+						---
+
+						### Les assertions
+
+						<div class="align-left">
+
+						<strong>Valeurs</strong> : `assertEquals()`, `assertSame()`, `assertTrue()`, `assertFalse()`
+
+						<strong>Tableaux</strong> : `assertCount()`, `assertContains()`, `assertArrayHasKey()`
+
+						<strong>Strings</strong> : `assertStringContainsString()`, `assertStringStartsWith()`
+
+						<strong>Objets</strong> : `assertInstanceOf()`, `assertObjectHasAttribute()`
+
+						<strong>Nombres</strong> : `assertGreaterThan()`, `assertLessThan()`
+						</div>
+
+						---
+
+						100% de coverage sur ma classe !
+
+						![GIF animé](https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExbHBhZnFnem4ycnRvbTNwMXZzNno2a2dvdGwycHI1Y2d4a2I5YTFlOSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l0He0cVv8lGggpruo/giphy.gif)
+
+						---
+
+						![GIF animé](https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExYjhwc2x6aXFsNXFvN3p2Zzcwa2Q1dW91c2FuaG92N3VmMG8xbHh6ayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/ui4VjMUBGXhwgdwUnK/giphy.gif)
+
+						---
+
+						<div class="align-left">
+						Il manque des tests avec des utilisateurs avec des noms en majuscule, des caractères spéciaux, etc... Ajoutez des tests pour couvrir ces cas.
+						</div>
+
+						---
+
+						<div class="align-left">
+						src/Service/EmailService
+						</div>
+
+						```php [9:]
+						class EmailService
+						{
+							private const EMAIL_DOMAIN = 'custom.fr';
+
+							public function __construct(private UserService $userService)
+							{
+							}
+
+							public function generateEmail(User $user): string
+							{
+								if ($user->getFirstName() === '' || $user->getLastName() === '') {
+									throw new InvalidUserException('First name and last name cannot be empty');
+								}
+
+								$username = $this->userService->generateUsername($user);
+
+								return $username . '@' . self::EMAIL_DOMAIN;
+							}
+						}
+						```
+						---
+
+						<div class="align-left">
+						Tester une exception
+						</div>
+
+						```php [13:]
+						#[CoversClass(EmailService::class)]
+						class EmailServiceTest extends TestCase
+						{
+							public function testGenerateEmailThrowException(): void
+							{ }
+						}
+						```
+						---
+
+						```php [16:]
+						public function testGenerateEmailThrowException(): void
+						{
+							// Given
+							$user = (new User())->setFirstName('')->setLastName('');
+							$emailService = new EmailService(new UserService());
+
+							// Then
+							$this->expectException(InvalidUserException::class);
+							$this->expectExceptionMessage('First name and last name cannot be empty');
+
+							// When
+							$emailService->generateEmail($user);
+						}
+						```
+
+						---
+
+						<div class="align-left">
+						On peut éviter les répétitions en exécutant du code avant chaque test :
+						</div>
+
+						```php [16:]
+						private EmailService $emailService;
+
+						public function setUp(): void
+						{
+							$this->emailService = new EmailService(new UserService());
+						}
+
+						public function testGenerateEmailThrowException(): void
+						{
+							// Given
+							$user = (new User())->setFirstName('')->setLastName('');
+
+							// Then
+							$this->expectException(InvalidUserException::class);
+							$this->expectExceptionMessage('First name and last name cannot be empty');
+
+							// When
+							$this->emailService->generateEmail($user);
+						}
+						```
+
+						---
+
+						<div class="align-left">
+
+						Il existe également `tearDown` pour exécuter du code après chaque test :
+						</div>
+
+						```php [20:]
+						private string $tempFile;
+
+						public function setUp(): void
+						{
+							$this->tempFile = __DIR__ . '/temp.txt';
+							file_put_contents($this->tempFile, 'Hello World');
+						}
+
+						public function tearDown(): void
+						{
+							if (file_exists($this->tempFile)) {
+								unlink($this->tempFile);
+							}
+						}
+						```
+
+						---
+
+						Retournons améliorer nos tests sur le UserService, on peut optimiser nos tests !
+
+						---
+
+						<div class="align-left">
+						On peut ajouter un setUp, mais on peut aller encore plus loin.
+						</div>
+
+						```php [19:]
+						private UserService $userService;
+
+						public function setUp(): void
+						{
+							$this->userService = new UserService();
+						}
+						```
+
+						---
+
+						Les dataProviders !
+
+						```php
+						#[DataProvider('usernameProvider')]
+						public function testGenerateUsername(string $firstName, string $lastName, string $expected)
+						{
+							// Given
+							$user = (new User())->setFirstName($firstName)->setLastName($lastName);
+
+							// When
+							$result = $this->userService->generateUsername($user);
+
+							// Then
+							$this->assertSame($expected, $result);
+						}
+
+						public static function usernameProvider(): \Generator
+						{
+							yield ['John', 'Doe', 'john.doe'];
+							yield ['Jane', 'Doe', 'jane.doe'];
+							yield ['Pierre', 'Dupond@#', 'pierre.dupond'];
+						}
+						```
+
+						---
+
+						Place à la pratique !
+
+						<div class="align-left">
+						Ecrire un test pour src/Service/FavoriteColorGuessService;
 						</div>
 					</textarea>
 				</section>
