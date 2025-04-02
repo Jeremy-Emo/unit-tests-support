@@ -155,6 +155,32 @@
 						xdebug.start_with_request=yes
 
 						```
+
+						---
+
+						Fichier de configuration
+
+						```xml
+						<?xml version="1.0" encoding="UTF-8"?>
+						<phpunit bootstrap="vendor/autoload.php"
+								 colors="true"
+								 stopOnFailure="false"
+								 cacheDirectory=".phpunit.cache">
+							<!-- Définition des dossiers contenant les tests -->
+							<testsuites>
+								<testsuite name="UnitTests">
+									<directory suffix=".php">tests</directory>
+								</testsuite>
+							</testsuites>
+							<!-- Définition des dossiers contenant les sources -->
+							<source>
+								<include>
+									<directory>src</directory>
+								</include>
+							</source>
+							<!-- Et pour plus de customisation : https://docs.phpunit.de/en/12.0/configuration.html -->
+						</phpunit>
+						```
 					</textarea>
 				</section>
 
@@ -249,6 +275,14 @@
 
 						<strong>Nombres</strong> : `assertGreaterThan()`, `assertLessThan()`
 						</div>
+
+						---
+
+						### Lançons notre test !
+
+						```sh
+						php vendor/bin/phpunit --filter UserServiceTest
+						```
 
 						---
 
@@ -402,7 +436,7 @@
 
 						```php
 						#[DataProvider('usernameProvider')]
-						public function testGenerateUsername(string $firstName, string $lastName, string $expected)
+						public function testGenerateUsername(string $firstName, string $lastName, string $expected): void
 						{
 							// Given
 							$user = (new User())->setFirstName($firstName)->setLastName($lastName);
@@ -488,7 +522,7 @@
 							public function setUp(): void
 							{
 								$this->userService = $this->createMock(UserService::class);
-								$this->emailService = new EmailService(new UserService());
+								$this->emailService = new EmailService($this->userService);
 							}
 						```
 
@@ -606,6 +640,32 @@
 
 						Ne pas hésiter à la découper en plusieurs services.
 						</div>
+					</textarea>
+				</section>
+
+				<!-- Pour aller plus loin -->
+				<section data-markdown>
+					<textarea data-template>
+						## Pour aller plus loin
+
+						---
+
+						Paralléliser les tests avec
+
+						https://github.com/paratestphp/paratest
+
+						---
+
+						Intégration dans la CI
+
+						ex: GitHub Actions, GitLab CI, Jenkins, Azure devops
+
+						---
+
+						Intégration avec des outils de Quality Gate
+
+						ex: SonarQube
+
 					</textarea>
 				</section>
 
